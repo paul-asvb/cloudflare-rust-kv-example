@@ -39,6 +39,7 @@ pub async fn main(req: Request, env: Env) -> Result<Response> {
         .await
 }
 async fn handler(mut _req: Request, ctx: RouteContext<()>) -> Result<Response> {
+    
     match ctx.kv("NS") {
         Ok(store) => {
             return Response::ok(format!("{:?}", store.list()));
