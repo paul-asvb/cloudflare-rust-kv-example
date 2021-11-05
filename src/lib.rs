@@ -31,7 +31,7 @@ pub async fn main(req: Request, env: Env) -> Result<Response> {
         .get("/", |_, _| Response::ok("Hello from Workers!"))
         .get_async("/kv", handler)
         .post_async("/kv", handler)
-        .get("/worker-version", |_, ctx| {
+        .get("/version", |_, ctx| {
             let version = ctx.var("WORKERS_RS_VERSION")?.to_string();
             Response::ok(version)
         })
