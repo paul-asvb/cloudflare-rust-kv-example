@@ -19,5 +19,10 @@ main   = "./shim.mjs"
 globs = ["**/*.wasm"]
 type  = "CompiledWasm"
 
+
+kv_namespaces = [ 
+  { binding = "KV_TEST_NS", id = "0f2bad10127f46f0b8466d9ac37332a4" }
+]
+
 # read more about configuring your Worker via wrangler.toml at:
 # https://developers.cloudflare.com/workers/cli-wrangler/configuration

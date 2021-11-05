@@ -40,12 +40,13 @@ pub async fn main(req: Request, env: Env) -> Result<Response> {
 }
 async fn handler(mut _req: Request, ctx: RouteContext<()>) -> Result<Response> {
     
-    match ctx.kv("NS") {
+    match ctx.kv("KV_TEST_NS") {
         Ok(store) => {
             return Response::ok(format!("{:?}", store.list()));
         }
         Err(err) => return Response::error(format!("{:?}", err), 204),
     };
+
     //Response::ok("success")
 }
 
