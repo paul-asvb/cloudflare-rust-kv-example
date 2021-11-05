@@ -28,3 +28,9 @@ wrangler tail | jq '.'
 ```bash
 make pub
 ```
+
+## Add kv store
+```bash
+ wrangler kv:namespace create "KV_FROM_RUST"
+ ```
+ and copy request answer into wrangler.toml
