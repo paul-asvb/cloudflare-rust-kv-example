@@ -1,8 +1,11 @@
+compatibility_date = "2021-10-07"
+compatibility_flags = ["formdata_parser_supports_files"] # required
+kv_namespaces = [
+  {binding = "KV_FROM_RUST", id = "9cc0181d41af4bbeba1c582b9c7d7ed2"},
+]
 name = "cloudflare-rust-kv-example"
 type = "javascript"
 workers_dev = true
-compatibility_date = "2021-10-07"
-compatibility_flags = [ "formdata_parser_supports_files" ] # required
 
 [vars]
 WORKERS_RS_VERSION = "0.0.6"
@@ -11,18 +14,13 @@ WORKERS_RS_VERSION = "0.0.6"
 command = "cargo install -q worker-build && worker-build --release" # required
 
 [build.upload]
-dir    = "build/worker"
+dir = "build/worker"
 format = "modules"
-main   = "./shim.mjs"
+main = "./shim.mjs"
 
 [[build.upload.rules]]
 globs = ["**/*.wasm"]
-type  = "CompiledWasm"
-
-
-kv_namespaces = [ 
-  { binding = "KV_TEST_NS", id = "0f2bad10127f46f0b8466d9ac37332a4" }
-]
+type = "CompiledWasm"
 
 # read more about configuring your Worker via wrangler.toml at:
 # https://developers.cloudflare.com/workers/cli-wrangler/configuration

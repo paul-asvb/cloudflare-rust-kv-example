@@ -40,7 +40,7 @@ pub async fn main(req: Request, env: Env) -> Result<Response> {
 }
 async fn handler(mut _req: Request, ctx: RouteContext<()>) -> Result<Response> {
     
-    match ctx.kv("KV_TEST_NS") {
+    match ctx.kv("KV_FROM_RUST") {
         Ok(store) => {
             return Response::ok(format!("{:?}", store.list()));
         }
