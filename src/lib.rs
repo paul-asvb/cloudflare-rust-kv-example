@@ -2,6 +2,13 @@ use worker::*;
 
 mod utils;
 
+#[derive(Serialize, Deserialize, Debug)]
+struct TestStruct {
+    test_bool: bool,
+    test_string: String,
+    test_int: u64,
+}
+
 fn log_request(req: &Request) {
     console_log!(
         "{} - [{}], located at: {:?}, within: {}",
@@ -39,9 +46,28 @@ pub async fn main(req: Request, env: Env) -> Result<Response> {
         .await
 }
 async fn handler(mut _req: Request, ctx: RouteContext<()>) -> Result<Response> {
-    
     match ctx.kv("KV_FROM_RUST") {
         Ok(store) => {
+            return Response::ok(format!("{:?}", store.list()));
+        }
+        Err(err) => return Response::error(format!("{:?}", err), 204),
+    };
+
+    //Response::ok("success")
+}
+
+async fn create_handler(mut _req: Request, ctx: RouteContext<()>) -> Result<Response> {
+    match ctx.kv("KV_FROM_RUST") {
+        Ok(store) => {
+            store.put(
+                "test",
+                "TestStruct {
+                    test_bool: tre,
+                    test_string: todo.to_string(),
+                    test_int: 1234,
+                },"
+                .to_string(),
+            );
             return Response::ok(format!("{:?}", store.list()));
         }
         Err(err) => return Response::error(format!("{:?}", err), 204),
