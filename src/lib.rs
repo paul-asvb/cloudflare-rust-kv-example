@@ -2,7 +2,6 @@ use worker::*;
 
 mod utils;
 
-#[derive(Serialize, Deserialize, Debug)]
 struct TestStruct {
     test_bool: bool,
     test_string: String,
@@ -37,7 +36,7 @@ pub async fn main(req: Request, env: Env) -> Result<Response> {
     router
         .get("/", |_, _| Response::ok("Hello from Workers!"))
         .get_async("/kv", handler)
-        .post_async("/kv", handler)
+        .post_async("/kv/:bla", create_handler)
         .get("/version", |_, ctx| {
             let version = ctx.var("WORKERS_RS_VERSION")?.to_string();
             Response::ok(version)
@@ -45,7 +44,7 @@ pub async fn main(req: Request, env: Env) -> Result<Response> {
         .run(req, env)
         .await
 }
-async fn handler(mut _req: Request, ctx: RouteContext<()>) -> Result<Response> {
+async fn handler(_req: Request, ctx: RouteContext<()>) -> Result<Response> {
     match ctx.kv("KV_FROM_RUST") {
         Ok(store) => {
             return Response::ok(format!("{:?}", store.list()));
@@ -59,16 +58,16 @@ async fn handler(mut _req: Request, ctx: RouteContext<()>) -> Result<Response> {
 async fn create_handler(mut _req: Request, ctx: RouteContext<()>) -> Result<Response> {
     match ctx.kv("KV_FROM_RUST") {
         Ok(store) => {
-            store.put(
-                "test",
-                "TestStruct {
-                    test_bool: tre,
-                    test_string: todo.to_string(),
-                    test_int: 1234,
-                },"
-                .to_string(),
-            );
-            return Response::ok(format!("{:?}", store.list()));
+            if let Some(bla) = ctx.param("bla") {
+                let put = store.put(r#"bla"#, bla);
+                if put.is_ok() {
+                    return Response::ok(format!("{:?}", store.list()));
+                } else {
+                    return Response::error("no bla", 500);
+                }
+            } else {
+                return Response::error("no bla", 500);
+            }
         }
         Err(err) => return Response::error(format!("{:?}", err), 204),
     };
