@@ -36,7 +36,7 @@ pub async fn main(req: Request, env: Env) -> Result<Response> {
     router
         .get("/", |_, _| Response::ok("Hello from Workers!"))
         .get_async("/kv", handler)
-        .post_async("/kv/:bla", create_handler)
+        .post_async("/kv/:name", create_handler)
         .get("/version", |_, ctx| {
             let version = ctx.var("WORKERS_RS_VERSION")?.to_string();
             Response::ok(version)
@@ -58,15 +58,15 @@ async fn handler(_req: Request, ctx: RouteContext<()>) -> Result<Response> {
 async fn create_handler(mut _req: Request, ctx: RouteContext<()>) -> Result<Response> {
     match ctx.kv("KV_FROM_RUST") {
         Ok(store) => {
-            if let Some(bla) = ctx.param("bla") {
-                let put = store.put(r#"bla"#, bla);
+            if let Some(name) = ctx.param("name") {
+                let put = store.put(name, "dyfg");
                 if put.is_ok() {
-                    return Response::ok(format!("{:?}", store.list()));
+                    return Response::ok("success");
                 } else {
-                    return Response::error("no bla", 500);
+                    return Response::error("storage error", 500);
                 }
             } else {
-                return Response::error("no bla", 500);
+                return Response::error("no name defined" , 400);
             }
         }
         Err(err) => return Response::error(format!("{:?}", err), 204),
