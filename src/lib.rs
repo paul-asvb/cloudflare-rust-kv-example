@@ -1,7 +1,10 @@
+use serde::{Deserialize, Serialize};
+use serde_json::Result as SerdeResult;
+
 use worker::*;
 
 mod utils;
-
+#[derive(Serialize, Deserialize)]
 struct TestStruct {
     test_bool: bool,
     test_string: String,
@@ -35,8 +38,8 @@ pub async fn main(req: Request, env: Env) -> Result<Response> {
     // Environment bindings like KV Stores, Durable Objects, Secrets, and Variables.
     router
         .get("/", |_, _| Response::ok("Hello from Workers!"))
-        .get_async("/kv", handler)
-        .post_async("/kv/:name", create_handler)
+        .get_async("/kv/:name", get_handler)
+        .post_async("/kv/:name", post_handler)
         .get("/version", |_, ctx| {
             let version = ctx.var("WORKERS_RS_VERSION")?.to_string();
             Response::ok(version)
@@ -44,33 +47,58 @@ pub async fn main(req: Request, env: Env) -> Result<Response> {
         .run(req, env)
         .await
 }
-async fn handler(_req: Request, ctx: RouteContext<()>) -> Result<Response> {
-    match ctx.kv("KV_FROM_RUST") {
-        Ok(store) => {
-            return Response::ok(format!("{:?}", store.list()));
-        }
-        Err(err) => return Response::error(format!("{:?}", err), 204),
-    };
-
-    //Response::ok("success")
-}
-
-async fn create_handler(mut _req: Request, ctx: RouteContext<()>) -> Result<Response> {
+async fn get_handler(_req: Request, ctx: RouteContext<()>) -> Result<Response> {
     match ctx.kv("KV_FROM_RUST") {
         Ok(store) => {
             if let Some(name) = ctx.param("name") {
-                let put = store.put(name, "dyfg");
-                if put.is_ok() {
-                    return Response::ok("success");
+                let res = store.get(name).await;
+                if res.is_ok() {
+                    let value = res.unwrap();
+                    if value.is_some() {
+                        return Response::ok(value.unwrap().as_string());
+                    } else {
+                        return Response::error("no value", 404);
+                    }
                 } else {
                     return Response::error("storage error", 500);
                 }
             } else {
-                return Response::error("no name defined" , 400);
+                return Response::error("no name defined", 400);
             }
         }
         Err(err) => return Response::error(format!("{:?}", err), 204),
     };
+}
+
+async fn post_handler(mut req: Request, ctx: RouteContext<()>) -> Result<Response> {
+    let store = match ctx.kv("KV_FROM_RUST") {
+        Ok(s) => s,
+        Err(err) => return Response::error(format!("{:?}", err), 204),
+    };
+
+    let name = match ctx.param("name") {
+        Some(name) => name,
+        _ => return Response::error("no name defined", 400),
+    };
+
+    let content: String = match req.text().await {
+        Ok(b) => b,
+        _ => return Response::error("body parse error", 400),
+    };
+
+    //let json = serde_json::to_string(&my_struct);
+
+    let put = store.put(name, content);
+    if put.is_ok() {
+        let exc = put.unwrap().execute().await;
+        if exc.is_ok() {
+            return Response::ok("success");
+        } else {
+            return Response::error("storage error", 500);
+        }
+    } else {
+        return Response::error("storage error", 500);
+    }
 
     //Response::ok("success")
 }
