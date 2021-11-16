@@ -1,5 +1,6 @@
+use handlebars::Handlebars;
 use serde::{Deserialize, Serialize};
-use serde_json::Result as SerdeResult;
+use serde_json::{json, Result as SerdeResult};
 
 use worker::*;
 
@@ -40,6 +41,7 @@ pub async fn main(req: Request, env: Env) -> Result<Response> {
         .get("/", |_, _| Response::ok("Hello from Workers!"))
         .get_async("/kv/:name", get_handler)
         .post_async("/kv/:name", post_handler)
+        .get_async("/template", get_template)
         .get("/version", |_, ctx| {
             let version = ctx.var("WORKERS_RS_VERSION")?.to_string();
             Response::ok(version)
@@ -99,21 +101,12 @@ async fn post_handler(mut req: Request, ctx: RouteContext<()>) -> Result<Respons
     } else {
         return Response::error("storage error", 500);
     }
-
-    //Response::ok("success")
 }
+async fn get_template(mut _req: Request, _ctx: RouteContext<()>) -> Result<Response> {
+    let reg = Handlebars::new();
 
-// let store = match ctx.kv("NS") {
-//     Ok(store) => {
-//         console_log!("{:?}", store.list());
-//         store
-//     }
-//     _ => return Response::error("store not found", 204),
-// };
-// match store.get("key").await {
-//     Ok(Some(kv)) => Response::ok(format!("{:?}", kv)),
-//     _ => Response::error("key not found", 204),
-// }
-
-//let kv = ctx.kv("paul-bot-NS")?;
-//kv.put("key", "value")?.execute().await?;
+    match reg.render_template("Hello {{name}}", &json!({"name": "foo"})) {
+        Ok(tmp) => Response::ok(tmp),
+        _ => Response::error("render_template error", 400),
+    }
+}
