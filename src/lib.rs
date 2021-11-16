@@ -49,27 +49,22 @@ pub async fn main(req: Request, env: Env) -> Result<Response> {
         .run(req, env)
         .await
 }
+
 async fn get_handler(_req: Request, ctx: RouteContext<()>) -> Result<Response> {
-    match ctx.kv("KV_FROM_RUST") {
-        Ok(store) => {
-            if let Some(name) = ctx.param("name") {
-                let res = store.get(name).await;
-                if res.is_ok() {
-                    let value = res.unwrap();
-                    if value.is_some() {
-                        return Response::ok(value.unwrap().as_string());
-                    } else {
-                        return Response::error("no value", 404);
-                    }
-                } else {
-                    return Response::error("storage error", 500);
-                }
-            } else {
-                return Response::error("no name defined", 400);
-            }
-        }
+    let store = match ctx.kv("KV_FROM_RUST") {
+        Ok(s) => s,
         Err(err) => return Response::error(format!("{:?}", err), 204),
     };
+
+    let name = match ctx.param("name") {
+        Some(n) => n,
+        None => return Response::error("no name defined", 400),
+    };
+
+    match store.get(name).await {
+        Ok(Some(value)) => Response::ok(value.as_string()),
+        _ => Response::error("store.get(name) err", 500),
+    }
 }
 
 async fn post_handler(mut req: Request, ctx: RouteContext<()>) -> Result<Response> {
@@ -102,6 +97,7 @@ async fn post_handler(mut req: Request, ctx: RouteContext<()>) -> Result<Respons
         return Response::error("storage error", 500);
     }
 }
+
 async fn get_template(mut _req: Request, _ctx: RouteContext<()>) -> Result<Response> {
     let reg = Handlebars::new();
 
