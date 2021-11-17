@@ -1,6 +1,7 @@
 use handlebars::Handlebars;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Result as SerdeResult};
+use yew;
 
 use worker::*;
 
@@ -42,6 +43,7 @@ pub async fn main(req: Request, env: Env) -> Result<Response> {
         .get_async("/kv/:name", get_handler)
         .post_async("/kv/:name", post_handler)
         .get_async("/template", get_template)
+        .get_async("/app", get_app)
         .get("/version", |_, ctx| {
             let version = ctx.var("WORKERS_RS_VERSION")?.to_string();
             Response::ok(version)
@@ -105,4 +107,68 @@ async fn get_template(mut _req: Request, _ctx: RouteContext<()>) -> Result<Respo
         Ok(tmp) => Response::ok(tmp),
         _ => Response::error("render_template error", 400),
     }
+}
+
+
+enum Msg {
+    AddOne,
+}
+
+struct Model {
+    // `ComponentLink` is like a reference to a component.
+    // It can be used to send messages to the component
+    link: yew::ComponentLink<Self>,
+    value: i64,
+}
+
+impl yew::Component for Model {
+    type Message = Msg;
+    type Properties = ();
+
+    fn create(_props: Self::Properties, link: yew::ComponentLink<Self>) -> Self {
+        Self {
+            link,
+            value: 0,
+        }
+    }
+
+    fn update(&mut self, msg: Self::Message) -> yew::ShouldRender {
+        match msg {
+            Msg::AddOne => {
+                self.value += 1;
+                // the value has changed so we need to
+                // re-render for it to appear on the page
+                true
+            }
+        }
+    }
+
+    fn change(&mut self, _props: Self::Properties) -> yew::ShouldRender {
+        // Should only return "true" if new properties are different to
+        // previously received properties.
+        // This component has no properties so we will always return "false".
+        false
+    }
+
+    fn view(&self) -> yew::Html {
+        yew::html! {
+            <div>
+                <button onclick=self.link.callback(|_| Msg::AddOne)>{ "+1" }</button>
+                <p>{ self.value }</p>
+            </div>
+        }
+    }
+}
+
+let print_hello = |name: String| {
+    println!( "Hello, {}!", name );
+};
+
+js! {
+    var print_hello = @{print_hello};
+    print_hello( "Bob" );
+    print_hello.drop(); // Necessary to clean up the closure on Rust's side.
+}
+
+async fn get_app(mut _req: Request, _ctx: RouteContext<()>) -> Result<Response> {
 }
