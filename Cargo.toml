@@ -27,7 +27,6 @@ console_error_panic_hook = { version = "0.1.1", optional = true }
 wee_alloc = { version = "0.4.2", optional = true }
 serde = "1.0.130"
 handlebars = "4.1.4"
-yew = "0.18.0"
 
 [profile.release]
 # Tell `rustc` to optimize for small code size.
