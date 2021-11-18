@@ -1,6 +1,7 @@
 use handlebars::Handlebars;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Result as SerdeResult};
+use yew;
 
 use worker::*;
 
@@ -42,6 +43,7 @@ pub async fn main(req: Request, env: Env) -> Result<Response> {
         .get_async("/kv/:name", get_handler)
         .post_async("/kv/:name", post_handler)
         .get_async("/template", get_template)
+        .get_async("/app", get_app)
         .get("/version", |_, ctx| {
             let version = ctx.var("WORKERS_RS_VERSION")?.to_string();
             Response::ok(version)
