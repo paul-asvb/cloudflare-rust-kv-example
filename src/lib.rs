@@ -1,7 +1,6 @@
 use handlebars::Handlebars;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Result as SerdeResult};
-use yew;
 
 use worker::*;
 
